@@ -112,7 +112,11 @@ class LTRTrainer(BaseTrainer):
             self._print_stats(i, loader, batch_size)
 
             # update wandb status
-            if self.wandb_writer is not None and i % self.settings.print_interval == 0:
+            if loader.training:
+                print_interval = self.settings.print_interval
+            else:
+                print_interval = self.settings.val_print_interval
+            if self.wandb_writer is not None and i % print_interval == 0:
                 if self.settings.local_rank in [-1, 0]:
                     self.wandb_writer.write_log(self.stats, self.epoch)
 
