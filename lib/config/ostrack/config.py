@@ -48,9 +48,15 @@ cfg.TRAIN.GIOU_WEIGHT = 2.0
 cfg.TRAIN.L1_WEIGHT = 5.0
 cfg.TRAIN.FREEZE_LAYERS = [0, ]
 cfg.TRAIN.PRINT_INTERVAL = 50
+cfg.TRAIN.VAL_PRINT_INTERVAL = 10
 cfg.TRAIN.VAL_EPOCH_INTERVAL = 20
 cfg.TRAIN.GRAD_CLIP_NORM = 0.1
 cfg.TRAIN.AMP = False
+
+## TRAIN save cfgs
+cfg.TRAIN.SAVE_EPOCH_INTERVAL = 1 # 1 means save model each epoch
+cfg.TRAIN.SAVE_LAST_N_EPOCH = 1 # besides, last n epoch model will be saved
+
 
 cfg.TRAIN.CE_START_EPOCH = 20  # candidate elimination start epoch
 cfg.TRAIN.CE_WARM_EPOCH = 80  # candidate elimination warm up epoch
