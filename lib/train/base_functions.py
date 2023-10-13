@@ -10,6 +10,7 @@ from lib.utils.misc import is_main_process
 
 def update_settings(settings, cfg):
     settings.print_interval = cfg.TRAIN.PRINT_INTERVAL
+    settings.val_print_interval = cfg.TRAIN.VAL_PRINT_INTERVAL
     settings.search_area_factor = {'template': cfg.DATA.TEMPLATE.FACTOR,
                                    'search': cfg.DATA.SEARCH.FACTOR}
     settings.output_sz = {'template': cfg.DATA.TEMPLATE.SIZE,
@@ -22,6 +23,8 @@ def update_settings(settings, cfg):
     settings.print_stats = None
     settings.batchsize = cfg.TRAIN.BATCH_SIZE
     settings.scheduler_type = cfg.TRAIN.SCHEDULER.TYPE
+    settings.save_epoch_interval = getattr(cfg.TRAIN, "SAVE_EPOCH_INTERVAL", 1)
+    settings.save_last_n_epoch = getattr(cfg.TRAIN, "SAVE_LAST_N_EPOCH", 1)
 
 
 def names2datasets(name_list: list, settings, image_loader):
@@ -135,16 +138,19 @@ def build_dataloaders(cfg, settings):
                              num_workers=cfg.TRAIN.NUM_WORKER, drop_last=True, stack_dim=1, sampler=train_sampler)
 
     # Validation samplers and loaders
-    dataset_val = sampler.TrackingSampler(datasets=names2datasets(cfg.DATA.VAL.DATASETS_NAME, settings, opencv_loader),
-                                          p_datasets=cfg.DATA.VAL.DATASETS_RATIO,
-                                          samples_per_epoch=cfg.DATA.VAL.SAMPLE_PER_EPOCH,
-                                          max_gap=cfg.DATA.MAX_SAMPLE_INTERVAL, num_search_frames=settings.num_search,
-                                          num_template_frames=settings.num_template, processing=data_processing_val,
-                                          frame_sample_mode=sampler_mode, train_cls=train_cls)
-    val_sampler = DistributedSampler(dataset_val) if settings.local_rank != -1 else None
-    loader_val = LTRLoader('val', dataset_val, training=False, batch_size=cfg.TRAIN.BATCH_SIZE,
-                           num_workers=cfg.TRAIN.NUM_WORKER, drop_last=True, stack_dim=1, sampler=val_sampler,
-                           epoch_interval=cfg.TRAIN.VAL_EPOCH_INTERVAL)
+    if cfg.DATA.VAL.DATASETS_NAME[0] is None:
+        loader_val = None
+    else:
+        dataset_val = sampler.TrackingSampler(datasets=names2datasets(cfg.DATA.VAL.DATASETS_NAME, settings, opencv_loader),
+                                            p_datasets=cfg.DATA.VAL.DATASETS_RATIO,
+                                            samples_per_epoch=cfg.DATA.VAL.SAMPLE_PER_EPOCH,
+                                            max_gap=cfg.DATA.MAX_SAMPLE_INTERVAL, num_search_frames=settings.num_search,
+                                            num_template_frames=settings.num_template, processing=data_processing_val,
+                                            frame_sample_mode=sampler_mode, train_cls=train_cls)
+        val_sampler = DistributedSampler(dataset_val) if settings.local_rank != -1 else None
+        loader_val = LTRLoader('val', dataset_val, training=False, batch_size=cfg.TRAIN.BATCH_SIZE,
+                            num_workers=cfg.TRAIN.NUM_WORKER, drop_last=True, stack_dim=1, sampler=val_sampler,
+                            epoch_interval=cfg.TRAIN.VAL_EPOCH_INTERVAL)
 
     return loader_train, loader_val
 
