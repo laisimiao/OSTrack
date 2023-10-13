@@ -82,7 +82,10 @@ def run(settings):
     # Optimizer, parameters, and learning rates
     optimizer, lr_scheduler = get_optimizer_scheduler(net, cfg)
     use_amp = getattr(cfg.TRAIN, "AMP", False)
-    trainer = LTRTrainer(actor, [loader_train, loader_val], optimizer, settings, lr_scheduler, use_amp=use_amp)
+    if loader_val is None:
+        trainer = LTRTrainer(actor, [loader_train], optimizer, settings, lr_scheduler, use_amp=use_amp)
+    else:
+        trainer = LTRTrainer(actor, [loader_train, loader_val], optimizer, settings, lr_scheduler, use_amp=use_amp)
 
     # train process
     trainer.train(cfg.TRAIN.EPOCH, load_latest=True, fail_safe=True)
