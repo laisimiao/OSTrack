@@ -27,13 +27,15 @@ class OSTrack(BaseTracker):
         self.preprocessor = Preprocessor()
         self.state = None
 
-        self.feat_sz = self.cfg.TEST.SEARCH_SIZE // self.cfg.MODEL.BACKBONE.STRIDE
+        self.stride = self.cfg.MODEL.BACKBONE.STRIDE if 'patch8' not in self.cfg.MODEL.BACKBONE.TYPE else 16
+        self.feat_sz = self.cfg.TEST.SEARCH_SIZE // self.stride
         # motion constrain
         self.output_window = hann2d(torch.tensor([self.feat_sz, self.feat_sz]).long(), centered=True).cuda()
 
         # for debug
         self.debug = params.debug
         self.use_visdom = params.debug
+        print(f"Tracking: debug: {self.debug} | use_visdom: {self.use_visdom}")
         self.frame_id = 0
         if self.debug:
             if not self.use_visdom:
