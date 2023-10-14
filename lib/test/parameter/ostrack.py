@@ -4,7 +4,7 @@ from lib.test.evaluation.environment import env_settings
 from lib.config.ostrack.config import cfg, update_config_from_file
 
 
-def parameters(yaml_name: str):
+def parameters(yaml_name: str, epoch=300):
     params = TrackerParams()
     prj_dir = env_settings().prj_dir
     save_dir = env_settings().save_dir
@@ -22,7 +22,7 @@ def parameters(yaml_name: str):
 
     # Network checkpoint path
     params.checkpoint = os.path.join(save_dir, "checkpoints/train/ostrack/%s/OSTrack_ep%04d.pth.tar" %
-                                     (yaml_name, cfg.TEST.EPOCH))
+                                     (yaml_name, epoch))  # cfg.TEST.EPOCH
 
     # whether to save boxes from all queries
     params.save_all_boxes = False

@@ -63,7 +63,7 @@ class Tracker:
         tracker = self.tracker_class(params, self.dataset_name)
         return tracker
 
-    def run_sequence(self, seq, debug=None):
+    def run_sequence(self, seq, debug=None, epoch=300):
         """Run tracker on sequence.
         args:
             seq: Sequence to run the tracker on.
@@ -71,7 +71,7 @@ class Tracker:
             debug: Set debug level (None means default value specified in the parameters).
             multiobj_mode: Which mode to use for multiple objects.
         """
-        params = self.get_parameters()
+        params = self.get_parameters(epoch)
 
         debug_ = debug
         if debug is None:
@@ -272,10 +272,10 @@ class Tracker:
             np.savetxt(bbox_file, tracked_bb, delimiter='\t', fmt='%d')
 
 
-    def get_parameters(self):
+    def get_parameters(self, epoch=300):
         """Get parameters."""
         param_module = importlib.import_module('lib.test.parameter.{}'.format(self.name))
-        params = param_module.parameters(self.parameter_name)
+        params = param_module.parameters(self.parameter_name, epoch=epoch)
         return params
 
     def _read_image(self, image_file: str):

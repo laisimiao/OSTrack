@@ -12,7 +12,7 @@ from lib.test.evaluation.tracker import Tracker
 
 
 def run_tracker(tracker_name, tracker_param, run_id=None, dataset_name='otb', sequence=None, debug=0, threads=0,
-                num_gpus=8):
+                num_gpus=8, epoch=300):
     """Run tracker on sequence or dataset.
     args:
         tracker_name: Name of tracking method.
@@ -25,13 +25,18 @@ def run_tracker(tracker_name, tracker_param, run_id=None, dataset_name='otb', se
     """
 
     dataset = get_dataset(dataset_name)
+    if run_id is None and epoch is not None:
+        run_id = epoch
 
     if sequence is not None:
-        dataset = [dataset[sequence]]
+        if isinstance(sequence, list):
+            dataset = [dataset[seq] for seq in sequence]
+        else:
+            dataset = [dataset[sequence]]
 
     trackers = [Tracker(tracker_name, tracker_param, dataset_name, run_id)]
 
-    run_dataset(dataset, trackers, debug, threads, num_gpus=num_gpus)
+    run_dataset(dataset, trackers, debug, threads, num_gpus=num_gpus, epoch=epoch)
 
 
 def main():
@@ -42,6 +47,7 @@ def main():
     parser.add_argument('--dataset_name', type=str, default='otb', help='Name of dataset (otb, nfs, uav, tpl, vot, tn, gott, gotv, lasot).')
     parser.add_argument('--sequence', type=str, default=None, help='Sequence number or name.')
     parser.add_argument('--debug', type=int, default=0, help='Debug level.')
+    parser.add_argument('--epoch', type=int, default=300, help='Debug level.')
     parser.add_argument('--threads', type=int, default=0, help='Number of threads.')
     parser.add_argument('--num_gpus', type=int, default=8)
 
@@ -53,7 +59,7 @@ def main():
         seq_name = args.sequence
 
     run_tracker(args.tracker_name, args.tracker_param, args.runid, args.dataset_name, seq_name, args.debug,
-                args.threads, num_gpus=args.num_gpus)
+                args.threads, num_gpus=args.num_gpus, epoch=args.epoch)
 
 
 if __name__ == '__main__':
