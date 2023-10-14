@@ -133,6 +133,8 @@ class VisionTransformer(BaseBackbone):
         self.patch_embed = embed_layer(
             img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
         num_patches = self.patch_embed.num_patches
+        # ----------------- new ---------------------
+        self.patch_size = self.patch_embed.patch_size[0]
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.dist_token = nn.Parameter(torch.zeros(1, 1, embed_dim)) if distilled else None
@@ -370,8 +372,11 @@ def _create_vision_transformer(variant, pretrained=False, default_cfg=None, **kw
             model.load_pretrained(pretrained, prefix='')
         else:
             checkpoint = torch.load(pretrained, map_location="cpu")
-            missing_keys, unexpected_keys = model.load_state_dict(checkpoint["model"], strict=False)
-            print('Load pretrained model from: ' + pretrained)
+            ckpt = checkpoint["model"] if "model" in checkpoint else checkpoint
+            missing_keys, unexpected_keys = model.load_state_dict(ckpt, strict=False)
+            print('Load pretrained backbone from: ' + pretrained)
+            print('Load pretrained backbone missing_keys: ', missing_keys)
+            print('Load pretrained backbone unexpected_keys: ', unexpected_keys)
 
     return model
 
@@ -383,4 +388,29 @@ def vit_base_patch16_224(pretrained=False, **kwargs):
     model_kwargs = dict(
         patch_size=16, embed_dim=768, depth=12, num_heads=12, **kwargs)
     model = _create_vision_transformer('vit_base_patch16_224_in21k', pretrained=pretrained, **model_kwargs)
+    return model
+
+######################## add on my own ###############################
+def vit_small_patch8_224(pretrained=False, **kwargs):
+    """ ViT-Small (ViT-S/8) w/ DINO pretrained weights (no head) - https://arxiv.org/abs/2104.14294
+    """
+    model_kwargs = dict(patch_size=8, embed_dim=384, depth=12, num_heads=6, **kwargs)
+    model = _create_vision_transformer('vit_small_patch8_224_dino', pretrained=pretrained, **model_kwargs)
+    return model
+
+def vit_small_patch16_224(pretrained=False, **kwargs):
+    """ ViT-Small (ViT-S/16)
+    NOTE I've replaced my previous 'small' model definition and weights with the small variant from the DeiT paper
+    """
+    model_kwargs = dict(patch_size=16, embed_dim=384, depth=12, num_heads=6, **kwargs)
+    model = _create_vision_transformer('vit_small_patch16_224_in21k_ft1k', pretrained=pretrained, **model_kwargs)
+    return model
+
+def vit_tiny_patch16_224(pretrained=False, **kwargs):
+    """ ViT-Tiny (Vit-Ti/16).
+    ImageNet-21k weights @ 224x224, source https://github.com/google-research/vision_transformer.
+    NOTE: this model has valid 21k classifier head and no representation (pre-logits) layer
+    """
+    model_kwargs = dict(patch_size=16, embed_dim=192, depth=12, num_heads=3, **kwargs)
+    model = _create_vision_transformer('vit_tiny_patch16_224_in21k', pretrained=pretrained, **model_kwargs)
     return model
