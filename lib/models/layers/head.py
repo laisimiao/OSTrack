@@ -96,11 +96,14 @@ class Corner_Predictor(nn.Module):
 
 
 class CenterPredictor(nn.Module, ):
-    def __init__(self, inplanes=64, channel=256, feat_sz=20, stride=16, freeze_bn=False):
+    def __init__(self, inplanes=64, channel=256, feat_sz=20, stride=16, freeze_bn=False, patch8=False):
         super(CenterPredictor, self).__init__()
         self.feat_sz = feat_sz
         self.stride = stride
         self.img_sz = self.feat_sz * self.stride
+        self.patch8 = patch8        
+        if patch8:
+            self.down = conv(inplanes, inplanes, kernel_size=3, stride=2, padding=1, freeze_bn=freeze_bn)
 
         # corner predict
         self.conv1_ctr = conv(inplanes, channel, freeze_bn=freeze_bn)
@@ -129,6 +132,8 @@ class CenterPredictor(nn.Module, ):
 
     def forward(self, x, gt_score_map=None):
         """ Forward pass with input x. """
+        if self.patch8:
+            x = self.down(x)
         score_map_ctr, size_map, offset_map = self.get_score_map(x)
 
         # assert gt_score_map is None
@@ -221,8 +226,8 @@ class MLP(nn.Module):
         return x
 
 
-def build_box_head(cfg, hidden_dim):
-    stride = cfg.MODEL.BACKBONE.STRIDE
+def build_box_head(cfg, hidden_dim, patch8=False):
+    stride = cfg.MODEL.BACKBONE.STRIDE if 'patch8' not in cfg.MODEL.BACKBONE.TYPE else 16
 
     if cfg.MODEL.HEAD.TYPE == "MLP":
         mlp_head = MLP(hidden_dim, hidden_dim, 4, 3)  # dim_in, dim_hidden, dim_out, 3 layers
@@ -242,7 +247,7 @@ def build_box_head(cfg, hidden_dim):
         out_channel = cfg.MODEL.HEAD.NUM_CHANNELS
         feat_sz = int(cfg.DATA.SEARCH.SIZE / stride)
         center_head = CenterPredictor(inplanes=in_channel, channel=out_channel,
-                                      feat_sz=feat_sz, stride=stride)
+                                      feat_sz=feat_sz, stride=stride, patch8=patch8)
         return center_head
     else:
         raise ValueError("HEAD TYPE %s is not supported." % cfg.MODEL.HEAD_TYPE)
