@@ -10,7 +10,7 @@ from torch import nn
 from torch.nn.modules.transformer import _get_clones
 
 from lib.models.layers.head import build_box_head
-from lib.models.ostrack.vit import vit_base_patch16_224
+from lib.models.ostrack.vit import vit_base_patch16_224, vit_small_patch16_224, vit_tiny_patch16_224, vit_small_patch8_224
 from lib.models.ostrack.vit_ce import vit_large_patch16_224_ce, vit_base_patch16_224_ce
 from lib.utils.box_ops import box_xyxy_to_cxcywh
 
@@ -18,7 +18,7 @@ from lib.utils.box_ops import box_xyxy_to_cxcywh
 class OSTrack(nn.Module):
     """ This is the base class for OSTrack """
 
-    def __init__(self, transformer, box_head, aux_loss=False, head_type="CORNER"):
+    def __init__(self, transformer, box_head, aux_loss=False, head_type="CORNER", patch8=False):
         """ Initializes the model.
         Parameters:
             transformer: torch module of the transformer architecture.
@@ -31,8 +31,8 @@ class OSTrack(nn.Module):
         self.aux_loss = aux_loss
         self.head_type = head_type
         if head_type == "CORNER" or head_type == "CENTER":
-            self.feat_sz_s = int(box_head.feat_sz)
-            self.feat_len_s = int(box_head.feat_sz ** 2)
+            self.feat_sz_s = int(box_head.feat_sz) if not patch8 else int(box_head.feat_sz * 2)
+            self.feat_len_s = int(box_head.feat_sz ** 2) if not patch8 else int((box_head.feat_sz * 2) ** 2)
 
         if self.aux_loss:
             self.box_head = _get_clones(self.box_head, 6)
@@ -94,13 +94,28 @@ class OSTrack(nn.Module):
 
 def build_ostrack(cfg, training=True):
     current_dir = os.path.dirname(os.path.abspath(__file__))  # This is your Project Root
-    pretrained_path = os.path.join(current_dir, '../../../pretrained_models')
+    pretrained_path = os.path.join(current_dir, '../../../pretrained')
     if cfg.MODEL.PRETRAIN_FILE and ('OSTrack' not in cfg.MODEL.PRETRAIN_FILE) and training:
         pretrained = os.path.join(pretrained_path, cfg.MODEL.PRETRAIN_FILE)
     else:
         pretrained = ''
 
-    if cfg.MODEL.BACKBONE.TYPE == 'vit_base_patch16_224':
+    if cfg.MODEL.BACKBONE.TYPE == 'vit_tiny_patch16_224':
+        backbone = vit_tiny_patch16_224(pretrained, drop_path_rate=cfg.TRAIN.DROP_PATH_RATE)
+        hidden_dim = backbone.embed_dim
+        patch_start_index = 1
+
+    elif cfg.MODEL.BACKBONE.TYPE == 'vit_small_patch8_224':
+        backbone = vit_small_patch8_224(pretrained, drop_path_rate=cfg.TRAIN.DROP_PATH_RATE)
+        hidden_dim = backbone.embed_dim
+        patch_start_index = 1
+
+    elif cfg.MODEL.BACKBONE.TYPE == 'vit_small_patch16_224':
+        backbone = vit_small_patch16_224(pretrained, drop_path_rate=cfg.TRAIN.DROP_PATH_RATE)
+        hidden_dim = backbone.embed_dim
+        patch_start_index = 1
+
+    elif cfg.MODEL.BACKBONE.TYPE == 'vit_base_patch16_224':
         backbone = vit_base_patch16_224(pretrained, drop_path_rate=cfg.TRAIN.DROP_PATH_RATE)
         hidden_dim = backbone.embed_dim
         patch_start_index = 1
@@ -127,13 +142,14 @@ def build_ostrack(cfg, training=True):
 
     backbone.finetune_track(cfg=cfg, patch_start_index=patch_start_index)
 
-    box_head = build_box_head(cfg, hidden_dim)
+    box_head = build_box_head(cfg, hidden_dim, patch8="patch8" in cfg.MODEL.BACKBONE.TYPE)
 
     model = OSTrack(
         backbone,
         box_head,
         aux_loss=False,
         head_type=cfg.MODEL.HEAD.TYPE,
+        patch8="patch8" in cfg.MODEL.BACKBONE.TYPE
     )
 
     if 'OSTrack' in cfg.MODEL.PRETRAIN_FILE and training:
@@ -142,3 +158,12 @@ def build_ostrack(cfg, training=True):
         print('Load pretrained model from: ' + cfg.MODEL.PRETRAIN_FILE)
 
     return model
+
+if __name__ == '__main__':
+    import importlib
+
+    config_module = importlib.import_module("lib.config.%s.config" % 'ostrack')
+    cfg = config_module.cfg
+    config_module.update_config_from_file('/home/lz/PycharmProjects/OSTrack/experiments/ostrack/vits8_256_imgnet_32x2_ep300.yaml')
+    ostrack = build_ostrack(cfg, training=True)
+    # print(ostrack.backbone)
