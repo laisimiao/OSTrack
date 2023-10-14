@@ -77,7 +77,7 @@ class OSTrackActor(BaseActor):
     def compute_losses(self, pred_dict, gt_dict, return_status=True):
         # gt gaussian map
         gt_bbox = gt_dict['search_anno'][-1]  # (Ns, batch, 4) (x1,y1,w,h) -> (batch, 4)
-        gt_gaussian_maps = generate_heatmap(gt_dict['search_anno'], self.cfg.DATA.SEARCH.SIZE, self.cfg.MODEL.BACKBONE.STRIDE)
+        gt_gaussian_maps = generate_heatmap(gt_dict['search_anno'], self.cfg.DATA.SEARCH.SIZE, 16)  # self.cfg.MODEL.BACKBONE.STRIDE
         gt_gaussian_maps = gt_gaussian_maps[-1].unsqueeze(1)
 
         # Get boxes
