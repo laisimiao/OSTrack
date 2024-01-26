@@ -52,6 +52,7 @@ cfg.TRAIN.VAL_PRINT_INTERVAL = 10
 cfg.TRAIN.VAL_EPOCH_INTERVAL = 20
 cfg.TRAIN.GRAD_CLIP_NORM = 0.1
 cfg.TRAIN.AMP = False
+cfg.TRAIN.ACCUM_ITER = 1
 
 ## TRAIN save cfgs
 cfg.TRAIN.SAVE_EPOCH_INTERVAL = 1 # 1 means save model each epoch
