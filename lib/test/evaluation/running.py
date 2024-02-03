@@ -28,15 +28,15 @@ def _save_tracker_output(seq: Sequence, tracker: Tracker, output: dict):
 
     def save_bb(file, data):
         tracked_bb = np.array(data).astype(int)
-        np.savetxt(file, tracked_bb, delimiter='\t', fmt='%d')
+        np.savetxt(file, tracked_bb, delimiter=',', fmt='%d')
 
     def save_time(file, data):
         exec_times = np.array(data).astype(float)
-        np.savetxt(file, exec_times, delimiter='\t', fmt='%f')
+        np.savetxt(file, exec_times, delimiter=',', fmt='%f')
 
     def save_score(file, data):
         scores = np.array(data).astype(float)
-        np.savetxt(file, scores, delimiter='\t', fmt='%.2f')
+        np.savetxt(file, scores, delimiter=',', fmt='%.2f')
 
     def _convert_dict(input_dict):
         data_dict = {}
