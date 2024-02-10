@@ -115,7 +115,7 @@ def run_sequence(seq: Sequence, tracker: Tracker, debug=False, num_gpu=8, epoch=
 
     def _results_exist():
         if seq.object_ids is None:
-            if seq.dataset in ['trackingnet', 'got10k']:
+            if seq.dataset in ['trackingnet', 'got10k', 'tnl2k', 'lasot', 'uav', 'nfs', 'lasot_extension_subset', 'itb']:
                 base_results_path = os.path.join(tracker.results_dir, seq.dataset, seq.name)
                 bbox_file = '{}.txt'.format(base_results_path)
             else:
