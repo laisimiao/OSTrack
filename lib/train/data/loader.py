@@ -2,13 +2,14 @@ import torch
 import torch.utils.data.dataloader
 import importlib
 import collections
-from torch._six import string_classes
 from lib.utils import TensorDict, TensorList
 
 if float(torch.__version__[:3]) >= 1.9 or len('.'.join((torch.__version__).split('.')[0:2])) > 3:
     int_classes = int
+    string_classes = str
 else:
     from torch._six import int_classes
+    from torch._six import string_classes
 
 
 def _check_use_shared_memory():
