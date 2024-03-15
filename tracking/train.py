@@ -42,8 +42,8 @@ def main():
                     "--script_prv %s --config_prv %s --distill %d --script_teacher %s --config_teacher %s --use_wandb %d"\
                     % (args.script, args.config, args.save_dir, args.use_lmdb, args.script_prv, args.config_prv,
                        args.distill, args.script_teacher, args.config_teacher, args.use_wandb)
-    elif args.mode == "multiple":
-        train_cmd = "python -m torch.distributed.launch --nproc_per_node %d --master_port %d lib/train/run_training.py " \
+    elif args.mode == "multiple":  # python -m torch.distributed.launch
+        train_cmd = "torchrun --nproc_per_node %d --master_port %d lib/train/run_training.py " \
                     "--script %s --config %s --save_dir %s --use_lmdb %d --script_prv %s --config_prv %s --use_wandb %d " \
                     "--distill %d --script_teacher %s --config_teacher %s" \
                     % (args.nproc_per_node, random.randint(10000, 50000), args.script, args.config, args.save_dir, args.use_lmdb, args.script_prv, args.config_prv, args.use_wandb,
