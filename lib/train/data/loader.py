@@ -27,13 +27,16 @@ def ltr_collate(batch):
     error_msg = "batch must contain tensors, numbers, dicts or lists; found {}"
     elem_type = type(batch[0])
     if isinstance(batch[0], torch.Tensor):
+        elem = batch[0]
         out = None
-        if _check_use_shared_memory():
+        if torch.utils.data.get_worker_info() is not None:
             # If we're in a background process, concatenate directly into a
             # shared memory tensor to avoid an extra copy
-            numel = sum([x.numel() for x in batch])
-            storage = batch[0].storage()._new_shared(numel)
-            out = batch[0].new(storage)
+            numel = sum(x.numel() for x in batch)
+            storage = elem._typed_storage()._new_shared(numel, device=elem.device)
+            new_shape = list(elem.size())
+            new_shape.insert(0, len(batch))
+            out = elem.new(storage).resize_(*new_shape)
         return torch.stack(batch, 0, out=out)
         # if batch[0].dim() < 4:
         #     return torch.stack(batch, 0, out=out)
@@ -78,13 +81,16 @@ def ltr_collate_stack1(batch):
     error_msg = "batch must contain tensors, numbers, dicts or lists; found {}"
     elem_type = type(batch[0])
     if isinstance(batch[0], torch.Tensor):
+        elem = batch[0]
         out = None
-        if _check_use_shared_memory():
+        if torch.utils.data.get_worker_info() is not None:
             # If we're in a background process, concatenate directly into a
             # shared memory tensor to avoid an extra copy
-            numel = sum([x.numel() for x in batch])
-            storage = batch[0].storage()._new_shared(numel)
-            out = batch[0].new(storage)
+            numel = sum(x.numel() for x in batch)
+            storage = elem._typed_storage()._new_shared(numel, device=elem.device)
+            new_shape = list(elem.size())
+            new_shape.insert(1, len(batch))
+            out = elem.new(storage).resize_(*new_shape)
         return torch.stack(batch, 1)  #, out=out
         # if batch[0].dim() < 4:
         #     return torch.stack(batch, 0, out=out)
@@ -94,8 +100,8 @@ def ltr_collate_stack1(batch):
         elem = batch[0]
         if elem_type.__name__ == 'ndarray':
             # array of string classes and object
-            if torch.utils.data.dataloader.re.search('[SaUO]', elem.dtype.str) is not None:
-                raise TypeError(error_msg.format(elem.dtype))
+            # if torch.utils.data.dataloader.re.search('[SaUO]', elem.dtype.str) is not None:
+            #     raise TypeError(error_msg.format(elem.dtype))
 
             return torch.stack([torch.from_numpy(b) for b in batch], 1)
         if elem.shape == ():  # scalars
