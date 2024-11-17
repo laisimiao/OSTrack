@@ -36,7 +36,7 @@ class TNL2kDataset(BaseDataset):
         frames_list = ['{}/{}'.format(frames_path, frame_i) for frame_i in frames_list]
 
         # target_class = class_name
-        return Sequence(sequence_name, frames_list, 'tnl2k', ground_truth_rect.reshape(-1, 4), text_dsp=text_dsp)
+        return Sequence(sequence_name, frames_list, 'tnl2k', ground_truth_rect.reshape(-1, 4))
 
     def __len__(self):
         return len(self.sequence_list)
