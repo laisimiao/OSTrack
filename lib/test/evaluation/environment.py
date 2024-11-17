@@ -75,7 +75,7 @@ class EnvSettings_ITP:
         self.vot22_path = os.path.join(data_dir, 'vot2022')
         self.itb_path = os.path.join(data_dir, 'itb')
         self.tnl2k_path = os.path.join(data_dir, 'tnl2k')
-        self.lasot_extension_subset_path_path = os.path.join(data_dir, 'lasot_extension_subset')
+        self.lasot_extension_subset_path = os.path.join(data_dir, 'lasot_extension_subset')
         self.davis_dir = ''
         self.youtubevos_dir = ''
 
