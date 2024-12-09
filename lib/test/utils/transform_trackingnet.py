@@ -20,7 +20,7 @@ def transform_trackingnet(tracker_name, cfg_name):
         if "time" not in item:
             src_path = os.path.join(src_dir, item)
             dest_path = os.path.join(dest_dir, item)
-            bbox_arr = np.loadtxt(src_path, dtype=int, delimiter='\t')
+            bbox_arr = np.loadtxt(src_path, dtype=int, delimiter=',')
             np.savetxt(dest_path, bbox_arr, fmt='%d', delimiter=',')
     # make zip archive
     shutil.make_archive(src_dir, "zip", src_dir)
