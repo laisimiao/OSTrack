@@ -181,6 +181,8 @@ def get_optimizer_scheduler(net, cfg):
             for n, p in net.named_parameters():
                 if p.requires_grad:
                     print(n)
+            n_parameters = sum(p.numel() for n, p in net.named_parameters() if p.requires_grad)
+            print(f'Number of trainable params: {n_parameters / (1e6)}M')
 
     if cfg.TRAIN.OPTIMIZER == "ADAMW":
         optimizer = torch.optim.AdamW(param_dicts, lr=cfg.TRAIN.LR,
